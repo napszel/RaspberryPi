@@ -14,10 +14,10 @@ try:
     epd.Clear(0xFF)
 
     # Creates an Image object (all white with size of screen); use 0 as last argument for black screen
-    emptyImage = Image.new('1', (epd2in7.EPD_HEIGHT, epd2in7.EPD_WIDTH), 255)
+    myImage = Image.new('1', (epd2in7.EPD_HEIGHT, epd2in7.EPD_WIDTH), 255)
 
     # Creating an ImageDraw object that can draw stuff on an Image object; will be edited in place
-    drawings = ImageDraw.Draw(emptyImage)
+    drawings = ImageDraw.Draw(myImage)
     
     font24 = ImageFont.truetype('/usr/share/fonts/truetype/wqy/wqy-microhei.ttc', 24)
 
@@ -34,7 +34,7 @@ try:
     drawings.line((10, 100, 400, 100), fill=0)
 
     # Display the Image object on the screen; it also prints 'Horizontal' on the console
-    epd.display(epd.getbuffer(emptyImage))
+    epd.display(epd.getbuffer(myImage))
 #    time.sleep(2)
     
     epd.sleep()
