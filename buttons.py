@@ -1,6 +1,8 @@
 from lib import epd2in7, epdconfig
 from PIL import Image, ImageFont, ImageDraw
 
+import urllib
+
 import RPi.GPIO as GPIO
 import time
 
@@ -25,11 +27,15 @@ def printWelcomeMessage():
     welcome = Image.new('1', (epd2in7.EPD_HEIGHT, epd2in7.EPD_WIDTH), 255)
 
     welcomeMessage = ImageDraw.Draw(welcome)
-    welcomeMessage.text((30, 60), 'Press a button', font = font18, fill = 0)
-    welcomeMessage.line((0, 10, 28, 65), fill=0)
-    welcomeMessage.line((0, 70, 28, 65), fill=0)
-    welcomeMessage.line((0, 130, 28, 65), fill=0)
-    welcomeMessage.line((0, 179, 28, 65), fill=0)
+    welcomeMessage.text((35, 0), 'This menu', font = font18, fill = 0)
+    welcomeMessage.text((35, 63), 'ETH/BTC display', font = font18, fill = 0)
+    welcomeMessage.text((35, 122), 'Ship', font = font18, fill = 0)
+    welcomeMessage.text((35, 155), 'Waves', font = font18, fill = 0)
+
+    welcomeMessage.line((0, 10, 28, 10), fill=0)
+    welcomeMessage.line((0, 73, 28, 73), fill=0)
+    welcomeMessage.line((0, 133, 28, 133), fill=0)
+    welcomeMessage.line((0, 175, 28, 169), fill=0)
 
     epd.display(epd.getbuffer(welcome))
 
