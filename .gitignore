@@ -1,2 +1,5 @@
 __pycache__
 *.pyc
+price_eth.json
+price_btc.json
+
