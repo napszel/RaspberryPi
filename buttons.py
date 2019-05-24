@@ -1,17 +1,23 @@
 from lib import epd2in7, epdconfig
 from PIL import Image, ImageFont, ImageDraw
 
-import urllib
+import urllib, json
 
 import RPi.GPIO as GPIO
-import time
+import sched, time
 
 GPIO.setmode(GPIO.BCM)
 
 epd = epd2in7.EPD()
 epd.init()
 
+cryptoUrl = "http://api.coinmarketcap.com/v1/ticker/"
+s = sched.scheduler(time.time, time.sleep)
+
+font60 = ImageFont.truetype('/usr/share/fonts/truetype/wqy/wqy-microhei.ttc', 60)
+font30 = ImageFont.truetype('/usr/share/fonts/truetype/wqy/wqy-microhei.ttc', 30)
 font18 = ImageFont.truetype('/usr/share/fonts/truetype/wqy/wqy-microhei.ttc', 18)
+font16 = ImageFont.truetype('/usr/share/fonts/truetype/wqy/wqy-microhei.ttc', 16)
 
 key1 = 5
 key2 = 6
@@ -23,28 +29,47 @@ GPIO.setup(key2, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(key3, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(key4, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
+
 def printWelcomeMessage():
     welcome = Image.new('1', (epd2in7.EPD_HEIGHT, epd2in7.EPD_WIDTH), 255)
 
     welcomeMessage = ImageDraw.Draw(welcome)
-    welcomeMessage.text((35, 0), 'This menu', font = font18, fill = 0)
-    welcomeMessage.text((35, 63), 'ETH/BTC display', font = font18, fill = 0)
-    welcomeMessage.text((35, 122), 'Ship', font = font18, fill = 0)
-    welcomeMessage.text((35, 155), 'Waves', font = font18, fill = 0)
-
-    welcomeMessage.line((0, 10, 28, 10), fill=0)
-    welcomeMessage.line((0, 73, 28, 73), fill=0)
-    welcomeMessage.line((0, 133, 28, 133), fill=0)
-    welcomeMessage.line((0, 175, 28, 169), fill=0)
+    welcomeMessage.text((0, 0), 'Welcome to Nilcons\' SMART OFFICE', font = font16, fill=0)
+    welcomeMessage.text((0, 25), 'display. Please select the ambience', font = font16, fill=0)
+    welcomeMessage.text((0, 50), 'of the room.', font = font16, fill = 0) 
+    welcomeMessage.text((0, 75), '1. Welcome menu card', font = font16, fill = 0)
+    welcomeMessage.text((0, 100), '2. Present current ETH/BTC prices', font = font16, fill = 0)
+    welcomeMessage.text((0, 125), '3. Motivational ship conquer scene ', font = font16, fill = 0)
+    welcomeMessage.text((0, 150), '4. Relaxing meditation waves', font = font16, fill = 0)
 
     epd.display(epd.getbuffer(welcome))
 
-def writeOnDisplay(string):
+def getPrice(cryptoName):
+    url = "http://api.coinmarketcap.com/v1/ticker/" + cryptoName
+    response = urllib.urlopen(url)
+    data = json.loads(response.read())
+    price = int(round(float(data[0]["price_usd"])))
+    return str(price)
+
+def cryptoTextGet():
     text = Image.new('1', (epd2in7.EPD_HEIGHT, epd2in7.EPD_WIDTH), 255)
     draw = ImageDraw.Draw(text)
 
-    draw.text((10, 0), string, font = font18, fill = 0)
-    epd.display(epd.getbuffer(text))
+    draw.text((0, 0), "Click 2. button again to update.", font = font18, fill = 0)
+    draw.text((0, 25), "ETH", font = font30, fill = 0)
+    draw.text((60, 35), getPrice("ethereum") + " $", font = font60, fill = 0)
+    draw.text((0, 100), "BTC", font = font30, fill = 0)
+    draw.text((60, 115), getPrice("bitcoin") + " $", font = font60, fill = 0)
+
+    return text
+
+def cryptoOnceDisplay():
+    epd.display(epd.getbuffer(cryptoTextGet()))
+    
+def cryptoScheduledDisplay(sc):
+    epd.display(epd.getbuffer(cryptoTextGet()))
+
+    s.enter(5, 1, cryptoScheduledDisplay, (sc,))
 
 def printImage(filename):
     image = Image.new('1', (epd2in7.EPD_HEIGHT, epd2in7.EPD_WIDTH), 255)
@@ -55,7 +80,7 @@ def printImage(filename):
 
 def main():
     printWelcomeMessage()
-
+    
     while True:
         key1state = GPIO.input(key1)
         key2state = GPIO.input(key2)
@@ -64,16 +89,14 @@ def main():
 
         if key1state == False:
             printWelcomeMessage()
-            time.sleep(0.2)
         if key2state == False:
-            writeOnDisplay('Button 2? Interesting choice.')
-            time.sleep(0.2)
+            cryptoOnceDisplay()
+            #s.enter(5, 1, cryptoScheduledDisplay, (s,))
+            #s.run()
         if key3state == False:
             printImage('images/boat.bmp')
-            time.sleep(0.2)
         if key4state == False:
             printImage('images/wave.bmp')
-            time.sleep(0.2)
 
 if __name__ == '__main__':
     main()
